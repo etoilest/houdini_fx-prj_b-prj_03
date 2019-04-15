@@ -1,17 +1,15 @@
 int handle = metastart(chs("meta"), @P);
 
-v@dir = 0;
-@edge = 0;
-@vortex = 0;
-@weight = 0;
+vector vortexf = 0;
+vector edgef = 0;
 
 while (metanext(handle)){
     float tmp, weight,edge, vortex;
-    vector vtmp;
+    vector vtmp, dir, cur_vortex, cur_edge = 0;
     matrix mtmp, xform = 1;
     
     if (metaimport(handle, "dir", @P, vtmp))
-        v@dir = vtmp;
+        dir = vtmp;
         
     if (metaimport(handle, "fedge", @P, tmp))
         edge = tmp;
@@ -26,9 +24,10 @@ while (metanext(handle)){
         xform = mtmp;
     
     vector pp = @P * invert(xform);
-    v@vortexf = normalize(cross(@dir, pp)) * xform;
-    @edge += edge * weight;
-    @vortex += vortex * weight;
-    @weight += weight;
-    @dir *= xform;
+    cur_vortex = normalize(cross(dir, pp)) * vortex * weight;
+    cur_edge = dir * edge * weight;
+    
+    vortexf += cur_vortex * matrix3(xform);
+    edgef += cur_edge * matrix3(xform);
 }
+@v += vortexf + edgef;
