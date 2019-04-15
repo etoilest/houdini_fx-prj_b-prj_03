@@ -1,0 +1,34 @@
+int handle = metastart(chs("meta"), @P);
+
+v@dir = 0;
+@edge = 0;
+@vortex = 0;
+@weight = 0;
+
+while (metanext(handle)){
+    float tmp, weight,edge, vortex;
+    vector vtmp;
+    matrix mtmp, xform = 1;
+    
+    if (metaimport(handle, "dir", @P, vtmp))
+        v@dir = vtmp;
+        
+    if (metaimport(handle, "fedge", @P, tmp))
+        edge = tmp;
+        
+    if (metaimport(handle, "fvortex", @P, tmp))
+        vortex = tmp;
+        
+    if (metaimport(handle, "meta:density", @P, tmp))
+        weight = tmp;
+        
+    if (metaimport(handle, "meta:transform", @P, mtmp))
+        xform = mtmp;
+    
+    vector pp = @P * invert(xform);
+    v@vortexf = normalize(cross(@dir, pp)) * xform;
+    @edge += edge * weight;
+    @vortex += vortex * weight;
+    @weight += weight;
+    @dir *= xform;
+}
