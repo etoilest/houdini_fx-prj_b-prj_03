@@ -1,0 +1,39 @@
+//get full transform
+matrix m = primintrinsic(0, "packedfulltransform", @ptnum);
+
+//analyise matrix
+vector angles = radians(cracktransform(XFORM_TRS, XFORM_XYZ, 1, {0,0,0}, m));
+vector4 rotQuat = eulertoquaternion(angles, XFORM_XYZ);
+vector xRef = qrotate(rotQuat, {1,0,0});
+vector yRef = qrotate(rotQuat, {0,1,0});
+vector zRef = qrotate(rotQuat, {0,0,1});
+
+vector axisVecs[];
+append(axisVecs, xRef);
+append(axisVecs, yRef);
+append(axisVecs, zRef);
+
+float xAbsDots[] = {-2,-2,-2};
+
+for (int i=0; i<3; i++){
+    vector curVec = axisVecs[i];
+    float absDot = abs(dot({1,0,0}, curVec));
+    xAbsDots[i] = absDot;
+}
+int dotArgSort[] = argsort(xAbsDots);
+vector sideVec = axisVecs[dotArgSort[-1]];
+
+matrix3 alignXMat = dihedral(sideVec, {1,0,0});
+
+//modify matrix
+//split into rot/scale and positon
+matrix3 rotScl = matrix3(m) * alignXMat;
+vector pos = {0,0,0} * m;
+
+//set attrs
+@P -= pos;
+setprimintrinsic(0, "transform", @ptnum, rotScl, "set");
+
+3@rotMat = alignXMat;
+v@posOffset = pos;
+4@origTMat = m;
